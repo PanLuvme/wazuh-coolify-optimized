@@ -46,4 +46,27 @@ WORKDIR /usr/share/wazuh-indexer
 
 EXPOSE 9200 9300
 
-ENTRYPOINT ["/usr/share/wazuh-indexer/bin/opensearch"]
+RUN echo '#!/bin/bash\n\
+# Start OpenSearch in the background\n\
+/usr/share/wazuh-indexer/bin/opensearch &\n\
+PID=$!\n\
+\n\
+# Wait for the server to be ready\n\
+echo "Waiting for Indexer to start..."\n\
+timeout 60 bash -c "until curl -s -k https://localhost:9200 > /dev/null; do sleep 5; done"\n\
+\n\
+# Initialize Security if needed\n\
+echo "Running Security Initialization..."\n\
+export JAVA_HOME=/usr/share/wazuh-indexer/jdk\n\
+/usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh \\\n\
+  -cd /usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig/ \\\n\
+  -icl -nhnv \\\n\
+  -cacert /etc/wazuh-indexer/certs/root-ca.pem \\\n\
+  -cert /etc/wazuh-indexer/certs/admin.pem \\\n\
+  -key /etc/wazuh-indexer/certs/admin-key.pem \\\n\
+  -h localhost\n\
+\n\
+# Bring process to foreground\n\
+wait $PID' > /entrypoint.sh && chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
