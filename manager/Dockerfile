@@ -16,5 +16,6 @@ EXPOSE 1514 1515 55000
 
 VOLUME ["/var/ossec/data", "/var/ossec/logs", "/var/ossec/etc"]
 
-ENTRYPOINT ["/var/ossec/bin/wazuh-control"]
-CMD ["foreground"]
+
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["touch /var/ossec/logs/ossec.log && /var/ossec/bin/wazuh-control start && tail -f /var/ossec/logs/ossec.log"]
