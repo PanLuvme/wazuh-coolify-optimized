@@ -1,0 +1,6 @@
+.env
+.DS_Store
+*.pem
+*.key
+*.p12
+wazuh-certificates/
