@@ -17,3 +17,7 @@ Once deployed, the Wazuh Dashboard is accessible via port `5601`.
 * **Base OS:** Ubuntu 22.04 LTS
 * **Orchestration:** Docker Compose v3.8
 * **SSL:** Auto-generated self-signed certificates for internal node communication.
+
+---
+
+*Disclaimer: This project is intended for educational, research, and homelab environments.*
