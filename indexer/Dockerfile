@@ -2,7 +2,6 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl gnupg ca-certificates lsb-release openssl tar \
     && curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import \
@@ -13,7 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Generate Certificates
 RUN cat > /tmp/certs.sh <<EOF
 #!/bin/bash
 set -e
@@ -34,39 +32,35 @@ EOF
 
 RUN chmod +x /tmp/certs.sh && /tmp/certs.sh && rm /tmp/certs.sh
 
-# Permissions
 RUN chown -R wazuh-indexer:wazuh-indexer /etc/wazuh-indexer/certs && \
     chmod 750 /etc/wazuh-indexer/certs && \
     chmod 400 /etc/wazuh-indexer/certs/* && \
     chown -R wazuh-indexer:wazuh-indexer /usr/share/wazuh-indexer /var/lib/wazuh-indexer && \
     chown wazuh-indexer:wazuh-indexer /etc/default/wazuh-indexer
 
+RUN cat > /entrypoint.sh <<'EOF'
+#!/bin/bash
+/usr/share/wazuh-indexer/bin/opensearch &
+PID=$!
+echo "Waiting for Indexer to start..."
+timeout 60 bash -c "until curl -s -k https://localhost:9200 > /dev/null; do sleep 5; done"
+echo "Running Security Initialization..."
+export JAVA_HOME=/usr/share/wazuh-indexer/jdk
+/usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh \
+  -cd /usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig/ \
+  -icl -nhnv \
+  -cacert /etc/wazuh-indexer/certs/root-ca.pem \
+  -cert /etc/wazuh-indexer/certs/admin.pem \
+  -key /etc/wazuh-indexer/certs/admin-key.pem \
+  -h localhost
+wait $PID
+EOF
+
+RUN chmod +x /entrypoint.sh
+
 USER wazuh-indexer
 WORKDIR /usr/share/wazuh-indexer
 
 EXPOSE 9200 9300
-
-RUN echo '#!/bin/bash\n\
-# Start OpenSearch in the background\n\
-/usr/share/wazuh-indexer/bin/opensearch &\n\
-PID=$!\n\
-\n\
-# Wait for the server to be ready\n\
-echo "Waiting for Indexer to start..."\n\
-timeout 60 bash -c "until curl -s -k https://localhost:9200 > /dev/null; do sleep 5; done"\n\
-\n\
-# Initialize Security if needed\n\
-echo "Running Security Initialization..."\n\
-export JAVA_HOME=/usr/share/wazuh-indexer/jdk\n\
-/usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh \\\n\
-  -cd /usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig/ \\\n\
-  -icl -nhnv \\\n\
-  -cacert /etc/wazuh-indexer/certs/root-ca.pem \\\n\
-  -cert /etc/wazuh-indexer/certs/admin.pem \\\n\
-  -key /etc/wazuh-indexer/certs/admin-key.pem \\\n\
-  -h localhost\n\
-\n\
-# Bring process to foreground\n\
-wait $PID' > /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
