@@ -7,3 +7,13 @@ This stack deploys the three core Wazuh components:
 1.  **Wazuh Indexer:** The highly scalable search and analytics engine (OpenSearch derivative).
 2.  **Wazuh Server (Manager):** The analysis engine that processes agent data.
 3.  **Wazuh Dashboard:** The web user interface for data visualization and threat hunting.
+
+## 🛠️ Usage
+Once deployed, the Wazuh Dashboard is accessible via port `5601`.
+* **Username:** `admin`
+* **Password:** `(The value of WAZUH_PASSWORD)`
+
+## 🔧 Technical Details
+* **Base OS:** Ubuntu 22.04 LTS
+* **Orchestration:** Docker Compose v3.8
+* **SSL:** Auto-generated self-signed certificates for internal node communication.
