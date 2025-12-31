@@ -18,7 +18,9 @@ COPY run.sh /usr/local/bin/run.sh
 RUN chmod +x /usr/local/bin/generate-certs.sh && \
     chmod +x /usr/local/bin/run.sh && \
     /usr/local/bin/generate-certs.sh && \
-    chown -R wazuh-indexer:wazuh-indexer /usr/share/wazuh-indexer /var/lib/wazuh-indexer /etc/wazuh-indexer
+    chown -R wazuh-indexer:wazuh-indexer /usr/share/wazuh-indexer /var/lib/wazuh-indexer /etc/wazuh-indexer && \
+    chown wazuh-indexer:wazuh-indexer /etc/default/wazuh-indexer && \
+    chmod 644 /etc/default/wazuh-indexer
 
 USER wazuh-indexer
 WORKDIR /usr/share/wazuh-indexer
