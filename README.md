@@ -1,1 +1,1 @@
-# wazuh-coolify-optimized
+A custom, resource-efficient implementation of the **Wazuh Security Information and Event Management (SIEM)** system, specifically engineered for self-hosted environments like **Coolify** and **Docker**.
