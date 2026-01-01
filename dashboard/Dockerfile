@@ -13,8 +13,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN echo "opensearch.ssl.verificationMode: none" >> /etc/wazuh-dashboard/opensearch_dashboards.yml && \
-    echo "server.host: 0.0.0.0" >> /etc/wazuh-dashboard/opensearch_dashboards.yml
+RUN sed -i 's/^opensearch.ssl.verificationMode:.*$/opensearch.ssl.verificationMode: none/' /etc/wazuh-dashboard/opensearch_dashboards.yml && \
+    sed -i 's/^server.host:.*$/server.host: 0.0.0.0/' /etc/wazuh-dashboard/opensearch_dashboards.yml && \
+    echo "wazuh.api.ssl.verificationMode: none" >> /etc/wazuh-dashboard/opensearch_dashboards.yml
 
 RUN mkdir -p /var/lib/wazuh-dashboard /run/wazuh-dashboard && \
     chown -R wazuh-dashboard:wazuh-dashboard /usr/share/wazuh-dashboard /etc/wazuh-dashboard /var/lib/wazuh-dashboard /run/wazuh-dashboard
