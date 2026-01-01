@@ -1,0 +1,20 @@
+sudo docker exec -i wazuh-indexer-d4ksckokwwgsc8kowwwk44gw-003728481799 bash -c 'cat > /etc/wazuh-indexer/opensearch.yml <<EOF
+network.host: 0.0.0.0
+node.name: node-1
+discovery.seed_hosts: []
+discovery.type: single-node
+plugins.security.ssl.transport.pemcert_filepath: /etc/wazuh-indexer/certs/indexer.pem
+plugins.security.ssl.transport.pemkey_filepath: /etc/wazuh-indexer/certs/indexer-key.pem
+plugins.security.ssl.transport.pemtrustedcas_filepath: /etc/wazuh-indexer/certs/root-ca.pem
+plugins.security.ssl.transport.enforce_hostname_verification: false
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemcert_filepath: /etc/wazuh-indexer/certs/indexer.pem
+plugins.security.ssl.http.pemkey_filepath: /etc/wazuh-indexer/certs/indexer-key.pem
+plugins.security.ssl.http.pemtrustedcas_filepath: /etc/wazuh-indexer/certs/root-ca.pem
+plugins.security.allow_unsafe_democertificates: true
+plugins.security.allow_default_init_securityindex: true
+plugins.security.authcz.admin_dn:
+  - "CN=admin,O=Wazuh,L=California,C=US"
+plugins.security.nodes_dn:
+  - "CN=wazuh-indexer,O=Wazuh,L=California,C=US"
+EOF'
