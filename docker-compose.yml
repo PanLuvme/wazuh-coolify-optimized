@@ -31,7 +31,11 @@ services:
     networks:
       - wazuh-net
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:9200); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"401\" ] || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:9200); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"401\" ] || exit 1"
+        ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -105,7 +109,11 @@ services:
     networks:
       - wazuh-net
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/api/status); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"302\" ] || [ \"$$code\" = \"401\" ] || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/api/status); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"302\" ] || [ \"$$code\" = \"401\" ] || exit 1"
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -120,36 +128,14 @@ services:
     networks:
       - wazuh-net
       - coolify
+    volumes:
+      - ./wazuh-web/default.conf:/etc/nginx/conf.d/default.conf:ro
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
       start_period: 15s
-    command: |
-      /bin/sh -lc "
-      cat > /etc/nginx/conf.d/default.conf <<'EOF'
-      server {
-        listen 80;
-        location / {
-          proxy_pass http://wazuh-dashboard:5601;
-          proxy_http_version 1.1;
-
-          proxy_set_header Host \$host;
-          proxy_set_header X-Real-IP \$remote_addr;
-          proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto \$scheme;
-
-          proxy_set_header Upgrade \$http_upgrade;
-          proxy_set_header Connection \"upgrade\";
-
-          proxy_read_timeout 3600;
-          proxy_send_timeout 3600;
-        }
-      }
-      EOF
-      exec nginx -g 'daemon off;'
-      "
 
 volumes:
   wazuh-indexer-data:
