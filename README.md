@@ -10,8 +10,19 @@ This stack deploys the three core Wazuh components:
 
 ## 🛠️ Usage
 Once deployed, the Wazuh Dashboard is accessible via port `5601`.
-* **Username:** `admin`
-* **Password:** `(The value of WAZUH_PASSWORD)`
+
+### Default credentials (first boot)
+This stack uses the Indexer (OpenSearch) security users for the Dashboard login.
+
+* **Dashboard username:** value of `INDEXER_USERNAME` (default: `admin`)
+* **Dashboard password:** value of `INDEXER_PASSWORD` (default: `admin`)
+
+The Wazuh app inside the Dashboard connects to the Wazuh server API using:
+
+* **Wazuh API username:** value of `WAZUH_API_USERNAME` (default: `wazuh-wui`)
+* **Wazuh API password:** value of `WAZUH_API_PASSWORD` (default: `wazuh-wui`)
+
+See `.env.example`.
 
 ## 🔧 Technical Details
 * **Base OS:** Ubuntu 22.04 LTS

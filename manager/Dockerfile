@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" > /etc/apt/sources.list.d/wazuh.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends wazuh-manager \
+    && (apt-get install -y --no-install-recommends filebeat || apt-get install -y --no-install-recommends filebeat-oss) \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

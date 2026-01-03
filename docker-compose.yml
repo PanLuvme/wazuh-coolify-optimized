@@ -1,12 +1,17 @@
 version: '3.8'
 
+
 services:
   wazuh-indexer:
     build:
       context: ./indexer
       dockerfile: Dockerfile
-    container_name: wazuh-indexer
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       - "OPENSEARCH_JAVA_OPTS=-Xms1536m -Xmx1536m -XX:+UseG1GC"
       - "discovery.type=single-node"
@@ -27,7 +32,7 @@ services:
     networks:
       - wazuh-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -sk https://localhost:9200/_cluster/health || exit 1"]
+      test: ["CMD-SHELL", "code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:9200); [ \"$code\" = \"200\" ] || [ \"$code\" = \"401\" ] || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -37,17 +42,20 @@ services:
     build:
       context: ./manager
       dockerfile: Dockerfile
-    container_name: wazuh-manager
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "1514:1514/tcp"
       - "1515:1515/tcp"
-      - "55000:55000/tcp"
     environment:
-      - INDEXER_URL=https://wazuh-indexer:9200
-      - INDEXER_USERNAME=admin
-      - INDEXER_PASSWORD=admin
-      - FILEBEAT_SSL_VERIFICATION_MODE=none
+      - INDEXER_URL=${INDEXER_URL:-https://wazuh-indexer:9200}
+      - INDEXER_USERNAME=${INDEXER_USERNAME:-admin}
+      - INDEXER_PASSWORD=${INDEXER_PASSWORD:-admin}
+      - FILEBEAT_SSL_VERIFICATION_MODE=${FILEBEAT_SSL_VERIFICATION_MODE:-none}
     mem_limit: 2g
     mem_reservation: 1g
     cpus: 1.5
@@ -55,6 +63,7 @@ services:
       - wazuh-manager-data:/var/ossec/data
       - wazuh-manager-logs:/var/ossec/logs
       - wazuh-manager-etc:/var/ossec/etc
+      - wazuh-filebeat-data:/var/lib/filebeat
     depends_on:
       wazuh-indexer:
         condition: service_healthy
@@ -71,17 +80,21 @@ services:
     build:
       context: ./dashboard
       dockerfile: Dockerfile
-    container_name: wazuh-dashboard
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "5601:5601"
     environment:
-      - OPENSEARCH_HOSTS=https://wazuh-indexer:9200
-      - WAZUH_API_URL=https://wazuh-manager:55000
-      - INDEXER_USERNAME=admin
-      - INDEXER_PASSWORD=admin
-      - DASHBOARD_USERNAME=admin
-      - DASHBOARD_PASSWORD=admin
+      - INDEXER_URL=${INDEXER_URL:-https://wazuh-indexer:9200}
+      - INDEXER_USERNAME=${INDEXER_USERNAME:-admin}
+      - INDEXER_PASSWORD=${INDEXER_PASSWORD:-admin}
+      - WAZUH_API_URL=${WAZUH_API_URL:-https://wazuh-manager:55000}
+      - WAZUH_API_USERNAME=${WAZUH_API_USERNAME:-wazuh-wui}
+      - WAZUH_API_PASSWORD=${WAZUH_API_PASSWORD:-wazuh-wui}
       - SERVER_HOST=0.0.0.0
       - SERVER_PORT=5601
     mem_limit: 1.5g
@@ -95,7 +108,7 @@ services:
     networks:
       - wazuh-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/api/status); [ \"$code\" = \"200\" ] || [ \"$code\" = \"302\" ] || [ \"$code\" = \"401\" ] || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -106,6 +119,7 @@ volumes:
   wazuh-manager-data:
   wazuh-manager-logs:
   wazuh-manager-etc:
+  wazuh-filebeat-data:
 
 networks:
   wazuh-net:

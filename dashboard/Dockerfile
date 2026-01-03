@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN sed -i 's/^opensearch.ssl.verificationMode:.*$/opensearch.ssl.verificationMode: none/' /etc/wazuh-dashboard/opensearch_dashboards.yml && \
-    sed -i 's/^server.host:.*$/server.host: 0.0.0.0/' /etc/wazuh-dashboard/opensearch_dashboards.yml
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 RUN mkdir -p /var/lib/wazuh-dashboard /run/wazuh-dashboard && \
     chown -R wazuh-dashboard:wazuh-dashboard /usr/share/wazuh-dashboard /etc/wazuh-dashboard /var/lib/wazuh-dashboard /run/wazuh-dashboard
@@ -24,4 +24,4 @@ WORKDIR /usr/share/wazuh-dashboard
 
 EXPOSE 5601
 
-CMD ["/usr/share/wazuh-dashboard/bin/opensearch-dashboards", "-c", "/etc/wazuh-dashboard/opensearch_dashboards.yml"]
+ENTRYPOINT ["/entrypoint.sh"]

@@ -5,7 +5,6 @@ echo "Starting Wazuh Indexer..."
 /usr/share/wazuh-indexer/bin/opensearch &
 PID=$!
 
-# Wait for indexer to be ready
 echo "Waiting for Indexer to start..."
 timeout 90 bash -c 'until curl -sk https://localhost:9200 > /dev/null 2>&1; do sleep 3; done' || {
   echo "ERROR: Indexer failed to start within 90 seconds"
@@ -14,7 +13,6 @@ timeout 90 bash -c 'until curl -sk https://localhost:9200 > /dev/null 2>&1; do s
 
 echo "Indexer is up, initializing security..."
 
-# Initialize security plugin
 export JAVA_HOME=/usr/share/wazuh-indexer/jdk
 /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh \
   -cd /usr/share/wazuh-indexer/plugins/opensearch-security/securityconfig/ \

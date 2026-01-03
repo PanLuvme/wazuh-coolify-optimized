@@ -2,7 +2,6 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl gnupg ca-certificates lsb-release openssl tar \
     && curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import \
@@ -20,7 +19,6 @@ RUN chmod +x /usr/local/bin/generate-certs.sh && \
     chmod +x /usr/local/bin/run.sh && \
     /usr/local/bin/generate-certs.sh
 
-# Overwrite config with the correct "Single-Node + Admin" setup
 RUN cat > /etc/wazuh-indexer/opensearch.yml <<EOF
 network.host: 0.0.0.0
 node.name: node-1
@@ -42,7 +40,6 @@ plugins.security.nodes_dn:
   - "CN=wazuh-indexer,O=Wazuh,L=California,C=US"
 EOF
 
-# Permissions
 RUN chown -R wazuh-indexer:wazuh-indexer /usr/share/wazuh-indexer /var/lib/wazuh-indexer /etc/wazuh-indexer && \
     chown wazuh-indexer:wazuh-indexer /etc/default/wazuh-indexer
 
