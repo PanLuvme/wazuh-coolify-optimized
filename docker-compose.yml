@@ -1,5 +1,4 @@
-version: '3.8'
-
+version: "3.8"
 
 services:
   wazuh-indexer:
@@ -8,7 +7,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
@@ -32,7 +31,11 @@ services:
     networks:
       - wazuh-net
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:9200); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"401\" ] || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:9200); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"401\" ] || exit 1"
+        ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -44,7 +47,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
@@ -52,10 +55,10 @@ services:
       - "1514:1514/tcp"
       - "1515:1515/tcp"
     environment:
-      - INDEXER_URL=${INDEXER_URL:-https://wazuh-indexer:9200}
-      - INDEXER_USERNAME=${INDEXER_USERNAME:-admin}
-      - INDEXER_PASSWORD=${INDEXER_PASSWORD:-admin}
-      - FILEBEAT_SSL_VERIFICATION_MODE=${FILEBEAT_SSL_VERIFICATION_MODE:-none}
+      - "INDEXER_URL=${INDEXER_URL:-https://wazuh-indexer:9200}"
+      - "INDEXER_USERNAME=${INDEXER_USERNAME:-admin}"
+      - "INDEXER_PASSWORD=${INDEXER_PASSWORD:-admin}"
+      - "FILEBEAT_SSL_VERIFICATION_MODE=${FILEBEAT_SSL_VERIFICATION_MODE:-none}"
     mem_limit: 2g
     mem_reservation: 1g
     cpus: 1.5
@@ -82,19 +85,19 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
     environment:
-      - INDEXER_URL=${INDEXER_URL:-https://wazuh-indexer:9200}
-      - INDEXER_USERNAME=${INDEXER_USERNAME:-admin}
-      - INDEXER_PASSWORD=${INDEXER_PASSWORD:-admin}
-      - WAZUH_API_URL=${WAZUH_API_URL:-https://wazuh-manager:55000}
-      - WAZUH_API_USERNAME=${WAZUH_API_USERNAME:-wazuh-wui}
-      - WAZUH_API_PASSWORD=${WAZUH_API_PASSWORD:-wazuh-wui}
-      - SERVER_HOST=0.0.0.0
-      - SERVER_PORT=5601
+      - "INDEXER_URL=${INDEXER_URL:-https://wazuh-indexer:9200}"
+      - "INDEXER_USERNAME=${INDEXER_USERNAME:-admin}"
+      - "INDEXER_PASSWORD=${INDEXER_PASSWORD:-admin}"
+      - "WAZUH_API_URL=${WAZUH_API_URL:-https://wazuh-manager:55000}"
+      - "WAZUH_API_USERNAME=${WAZUH_API_USERNAME:-wazuh-wui}"
+      - "WAZUH_API_PASSWORD=${WAZUH_API_PASSWORD:-wazuh-wui}"
+      - "SERVER_HOST=0.0.0.0"
+      - "SERVER_PORT=5601"
     mem_limit: 1.5g
     mem_reservation: 768m
     cpus: 1
@@ -105,8 +108,13 @@ services:
         condition: service_healthy
     networks:
       - wazuh-net
+      - coolify
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/api/status); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"302\" ] || [ \"$$code\" = \"401\" ] || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/api/status); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"302\" ] || [ \"$$code\" = \"401\" ] || exit 1"
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -122,3 +130,6 @@ volumes:
 networks:
   wazuh-net:
     driver: bridge
+  coolify:
+    external: true
+    name: coolify
