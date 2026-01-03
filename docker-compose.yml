@@ -86,8 +86,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    ports:
-      - "5601:5601"
     environment:
       - INDEXER_URL=${INDEXER_URL:-https://wazuh-indexer:9200}
       - INDEXER_USERNAME=${INDEXER_USERNAME:-admin}
