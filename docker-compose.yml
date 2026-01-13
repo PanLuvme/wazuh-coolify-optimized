@@ -126,15 +126,18 @@ services:
     networks:
       - wazuh-net
       - coolify
-    # CRITICAL: Add these labels for Coolify/Traefik
     labels:
+      # Coolify management
       - "coolify.managed=true"
+      # Enable Traefik
       - "traefik.enable=true"
-      - "traefik.http.routers.wazuh.rule=Host(`wazuh.pandashii.com`)"
-      - "traefik.http.routers.wazuh.entrypoints=websecure"
-      - "traefik.http.routers.wazuh.tls=true"
-      - "traefik.http.routers.wazuh.tls.certresolver=letsencrypt"
-      - "traefik.http.services.wazuh.loadbalancer.server.port=80"
+      # HTTP Router (port 80)
+      - "traefik.http.routers.wazuh-http.rule=Host(`wazuh.pandashii.com`)"
+      - "traefik.http.routers.wazuh-http.entrypoints=web"
+      - "traefik.http.routers.wazuh-http.service=wazuh-service"
+      # Service definition
+      - "traefik.http.services.wazuh-service.loadbalancer.server.port=80"
+      # Network
       - "traefik.docker.network=coolify"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
@@ -145,15 +148,10 @@ services:
 
 volumes:
   wazuh-indexer-data:
-    driver: local
   wazuh-manager-data:
-    driver: local
   wazuh-manager-logs:
-    driver: local
   wazuh-manager-etc:
-    driver: local
   wazuh-filebeat-data:
-    driver: local
 
 networks:
   wazuh-net:
