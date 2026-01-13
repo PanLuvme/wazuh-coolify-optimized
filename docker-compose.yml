@@ -126,19 +126,6 @@ services:
     networks:
       - wazuh-net
       - coolify
-    labels:
-      # Coolify management
-      - "coolify.managed=true"
-      # Enable Traefik
-      - "traefik.enable=true"
-      # HTTP Router (port 80)
-      - "traefik.http.routers.wazuh-http.rule=Host(`wazuh.pandashii.com`)"
-      - "traefik.http.routers.wazuh-http.entrypoints=web"
-      - "traefik.http.routers.wazuh-http.service=wazuh-service"
-      # Service definition
-      - "traefik.http.services.wazuh-service.loadbalancer.server.port=80"
-      # Network
-      - "traefik.docker.network=coolify"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
       interval: 30s
