@@ -54,7 +54,6 @@ if command -v filebeat > /dev/null 2>&1; then
 
   mkdir -p /etc/filebeat
 
-  # Create Filebeat config with template disabled (fixes OpenSearch 2.x compatibility)
   cat > /etc/filebeat/filebeat.yml <<EOF
 filebeat.inputs:
   - type: log
@@ -72,9 +71,15 @@ output.elasticsearch:
   password: "${INDEXER_PASSWORD}"
   ssl.verification_mode: ${FILEBEAT_SSL_VERIFICATION_MODE}
   index: "wazuh-alerts-%{+yyyy.MM.dd}"
+  allow_older_versions: true
 
 setup.ilm.enabled: false
 setup.template.enabled: false
+
+processors:
+  - drop_fields:
+      fields: ["_type"]
+      ignore_missing: true
 EOF
 
   if [[ -n "$SSL_CERTIFICATE_AUTHORITIES" ]]; then
