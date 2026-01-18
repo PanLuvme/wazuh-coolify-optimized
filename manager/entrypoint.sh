@@ -92,6 +92,17 @@ EOF
     echo "  ssl.key: \"${SSL_KEY}\"" >> /etc/filebeat/filebeat.yml
   fi
 
+  # template for alerts
+  echo "[manager] Downloading Wazuh index template from GitHub..."
+  curl -s -o /etc/filebeat/wazuh-template.json https://raw.githubusercontent.com/wazuh/wazuh/master/extensions/elasticsearch/7.x/wazuh-template.json
+  chmod go+r /etc/filebeat/wazuh-template.json
+
+  echo "[manager] Uploading index template to Indexer..."
+  curl -s -k -X PUT "${INDEXER_URL}/_template/wazuh" \
+    -H 'Content-Type: application/json' \
+    -d @/etc/filebeat/wazuh-template.json \
+    -u "${INDEXER_USERNAME}:${INDEXER_PASSWORD}"
+    
   echo "[manager] Starting Filebeat in foreground..."
   exec filebeat -e -c /etc/filebeat/filebeat.yml
 else
