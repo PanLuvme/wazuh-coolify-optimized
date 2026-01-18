@@ -54,31 +54,8 @@ if command -v filebeat > /dev/null 2>&1; then
 
   mkdir -p /etc/filebeat
 
-  use_wazuh_module=false
-  if [[ -d "/usr/share/filebeat/module/wazuh" ]]; then
-    use_wazuh_module=true
-  fi
-
-  if [[ "$use_wazuh_module" == true ]]; then
-    cat > /etc/filebeat/filebeat.yml <<EOF
-filebeat.modules:
-  - module: wazuh
-    alerts:
-      enabled: true
-    archives:
-      enabled: false
-
-output.elasticsearch:
-  hosts: ["${idx_host}:${idx_port}"]
-  protocol: ${idx_scheme}
-  username: "${INDEXER_USERNAME}"
-  password: "${INDEXER_PASSWORD}"
-  ssl.verification_mode: ${FILEBEAT_SSL_VERIFICATION_MODE}
-
-setup.ilm.enabled: false
-EOF
-  else
-    cat > /etc/filebeat/filebeat.yml <<EOF
+  # Create Filebeat config with template disabled (fixes OpenSearch 2.x compatibility)
+  cat > /etc/filebeat/filebeat.yml <<EOF
 filebeat.inputs:
   - type: log
     enabled: true
@@ -94,10 +71,11 @@ output.elasticsearch:
   username: "${INDEXER_USERNAME}"
   password: "${INDEXER_PASSWORD}"
   ssl.verification_mode: ${FILEBEAT_SSL_VERIFICATION_MODE}
+  index: "wazuh-alerts-%{+yyyy.MM.dd}"
 
 setup.ilm.enabled: false
+setup.template.enabled: false
 EOF
-  fi
 
   if [[ -n "$SSL_CERTIFICATE_AUTHORITIES" ]]; then
     echo "  ssl.certificate_authorities: [\"${SSL_CERTIFICATE_AUTHORITIES}\"]" >> /etc/filebeat/filebeat.yml
