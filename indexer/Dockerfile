@@ -14,9 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY generate-certs.sh /usr/local/bin/generate-certs.sh
 COPY run.sh /usr/local/bin/run.sh
+COPY create-template.sh /usr/local/bin/create-template.sh
 
 RUN chmod +x /usr/local/bin/generate-certs.sh && \
     chmod +x /usr/local/bin/run.sh && \
+    chmod +x /usr/local/bin/create-template.sh && \
     /usr/local/bin/generate-certs.sh
 
 RUN cat > /etc/wazuh-indexer/opensearch.yml <<EOF
