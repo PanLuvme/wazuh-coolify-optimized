@@ -64,5 +64,13 @@ else
   done
 fi
 
+# Create Wazuh index template
+echo "Creating Wazuh index template..."
+if [[ -f /usr/local/bin/create-template.sh ]]; then
+  /usr/local/bin/create-template.sh &
+else
+  echo "WARNING: create-template.sh not found, skipping template creation"
+fi
+
 echo "Wazuh Indexer ready!"
 wait $PID
