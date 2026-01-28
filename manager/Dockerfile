@@ -16,18 +16,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install Filebeat 8.x (compatible with OpenSearch 2.x)
+# Install Filebeat 8.x for OpenSearch 2.x compatibility
 RUN wget -qO /tmp/filebeat-8.12.0-arm64.deb https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-8.12.0-arm64.deb \
     && dpkg -i /tmp/filebeat-8.12.0-arm64.deb \
     && rm /tmp/filebeat-8.12.0-arm64.deb
 
-# Configure filebeat
-COPY filebeat.yml /etc/filebeat/filebeat.yml
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-
-RUN chmod +x /usr/local/bin/entrypoint.sh && \
-    chmod 644 /etc/filebeat/filebeat.yml && \
-    chown root:root /etc/filebeat/filebeat.yml
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 1514 1515 55000
 VOLUME ["/var/ossec/data", "/var/ossec/logs", "/var/ossec/etc"]
