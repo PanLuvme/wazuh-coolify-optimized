@@ -18,6 +18,7 @@ services:
       - "discovery.type=single-node"
       - "network.host=0.0.0.0"
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      # Security ENABLED (no plugins.security.disabled)
     ulimits:
       memlock:
         soft: -1
@@ -33,7 +34,7 @@ services:
     networks:
       - wazuh-net
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:9200); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"401\" ] || exit 1"]
+      test: ["CMD-SHELL", "curl -sk -u admin:admin https://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -54,10 +55,10 @@ services:
       - "1514:1514/tcp"
       - "1515:1515/tcp"
     environment:
-      - "INDEXER_URL=${INDEXER_URL:-https://wazuh-indexer:9200}"
-      - "INDEXER_USERNAME=${INDEXER_USERNAME:-admin}"
-      - "INDEXER_PASSWORD=${INDEXER_PASSWORD:-admin}"
-      - "FILEBEAT_SSL_VERIFICATION_MODE=${FILEBEAT_SSL_VERIFICATION_MODE:-none}"
+      - "INDEXER_URL=https://wazuh-indexer:9200"
+      - "INDEXER_USERNAME=admin"
+      - "INDEXER_PASSWORD=admin"
+      - "FILEBEAT_SSL_VERIFICATION_MODE=none"
     mem_limit: 2g
     mem_reservation: 1g
     cpus: 1.5
@@ -90,12 +91,11 @@ services:
         max-size: "10m"
         max-file: "3"
     environment:
-      - "INDEXER_URL=${INDEXER_URL:-https://wazuh-indexer:9200}"
-      - "INDEXER_USERNAME=${INDEXER_USERNAME:-admin}"
-      - "INDEXER_PASSWORD=${INDEXER_PASSWORD:-admin}"
-      - "WAZUH_API_URL=${WAZUH_API_URL:-https://wazuh-manager:55000}"
-      - "WAZUH_API_USERNAME=${WAZUH_API_USERNAME:-wazuh-wui}"
-      - "WAZUH_API_PASSWORD=${WAZUH_API_PASSWORD:-wazuh-wui}"
+      - "OPENSEARCH_HOSTS=https://wazuh-indexer:9200"
+      - "OPENSEARCH_USERNAME=admin"
+      - "OPENSEARCH_PASSWORD=admin"
+      - "OPENSEARCH_SSL_VERIFICATIONMODE=none"
+      - "WAZUH_API_URL=https://wazuh-manager:55000"
       - "SERVER_HOST=0.0.0.0"
       - "SERVER_PORT=5601"
     mem_limit: 1.5g
