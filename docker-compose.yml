@@ -109,10 +109,10 @@ services:
     networks:
       - wazuh-net
     healthcheck:
-      test: ["CMD-SHELL", "code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/api/status); [ \"$$code\" = \"200\" ] || [ \"$$code\" = \"302\" ] || [ \"$$code\" = \"401\" ] || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 120s
 
   wazuh-web:
@@ -121,12 +121,18 @@ services:
       dockerfile: Dockerfile
     container_name: wazuh-web
     restart: unless-stopped
+    ports:
+      - "80:80"  # Expose on localhost:80 for Cloudflare tunnel
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       wazuh-dashboard:
         condition: service_healthy
     networks:
-      - wazuh-net
-      - coolify
+      - wazuh-net  # Only wazuh-net needed for Cloudflare tunnel
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
       interval: 30s
@@ -144,6 +150,3 @@ volumes:
 networks:
   wazuh-net:
     driver: bridge
-  coolify:
-    external: true
-    name: coolify
