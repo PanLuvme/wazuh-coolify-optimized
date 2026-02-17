@@ -1,85 +1,4 @@
-version: "3.8"
-
-services:
-  wazuh-indexer:
-    build:
-      context: ./indexer
-      dockerfile: Dockerfile
-    container_name: wazuh-indexer
-    restart: unless-stopped
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    environment:
-      - "COMPATIBILITY_OVERRIDE_MAIN_RESPONSE_VERSION=true"
-      - "OPENSEARCH_JAVA_OPTS=-Xms1536m -Xmx1536m -XX:+UseG1GC"
-      - "discovery.type=single-node"
-      - "network.host=0.0.0.0"
-      - "DISABLE_INSTALL_DEMO_CONFIG=true"
-      # Security ENABLED (no plugins.security.disabled)
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    mem_limit: 3g
-    mem_reservation: 2g
-    cpus: 2
-    volumes:
-      - wazuh-indexer-data:/var/lib/wazuh-indexer
-    networks:
-      - wazuh-net
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sk -u admin:admin https://localhost:9200/_cluster/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
-
-  wazuh-manager:
-    build:
-      context: ./manager
-      dockerfile: Dockerfile
-    container_name: wazuh-manager
-    restart: unless-stopped
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    ports:
-      - "1514:1514/tcp"
-      - "1515:1515/tcp"
-    environment:
-      - "INDEXER_URL=https://wazuh-indexer:9200"
-      - "INDEXER_USERNAME=admin"
-      - "INDEXER_PASSWORD=admin"
-      - "FILEBEAT_SSL_VERIFICATION_MODE=none"
-    mem_limit: 2g
-    mem_reservation: 1g
-    cpus: 1.5
-    volumes:
-      - wazuh-manager-data:/var/ossec/data
-      - wazuh-manager-logs:/var/ossec/logs
-      - wazuh-manager-etc:/var/ossec/etc
-      - wazuh-filebeat-data:/var/lib/filebeat
-    depends_on:
-      wazuh-indexer:
-        condition: service_healthy
-    networks:
-      - wazuh-net
-    healthcheck:
-      test: ["CMD-SHELL", "pgrep -x wazuh-modulesd > /dev/null || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 15
-      start_period: 180s
-
-  wazuh-dashboard:
+wazuh-dashboard:
     build:
       context: ./dashboard
       dockerfile: Dockerfile
@@ -90,6 +9,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    ports:
+      - "5601:5601" 
     environment:
       - "OPENSEARCH_HOSTS=https://wazuh-indexer:9200"
       - "OPENSEARCH_USERNAME=admin"
@@ -114,39 +35,3 @@ services:
       timeout: 10s
       retries: 5
       start_period: 120s
-
-  wazuh-web:
-    build:
-      context: ./wazuh-web
-      dockerfile: Dockerfile
-    container_name: wazuh-web
-    restart: unless-stopped
-    ports:
-      - "80:80"  # Expose on localhost:80 for Cloudflare tunnel
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-    depends_on:
-      wazuh-dashboard:
-        condition: service_healthy
-    networks:
-      - wazuh-net  # Only wazuh-net needed for Cloudflare tunnel
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
-
-volumes:
-  wazuh-indexer-data:
-  wazuh-manager-data:
-  wazuh-manager-logs:
-  wazuh-manager-etc:
-  wazuh-filebeat-data:
-
-networks:
-  wazuh-net:
-    driver: bridge
