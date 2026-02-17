@@ -27,7 +27,6 @@ export JAVA_HOME=/usr/share/wazuh-indexer/jdk
 }
 
 echo "Creating Wazuh index template..."
-# Retry until indexer accepts requests (security may take a moment)
 for i in {1..10}; do
   response=$(curl -sk -u admin:admin -X PUT "https://localhost:9200/_template/wazuh-alerts" \
     -H 'Content-Type: application/json' \
@@ -39,48 +38,42 @@ for i in {1..10}; do
         "index.refresh_interval": "5s"
       },
       "mappings": {
-        "dynamic": true,
         "dynamic_templates": [
           {
             "strings_as_keywords": {
               "match_mapping_type": "string",
               "mapping": {
                 "type": "keyword",
-                "ignore_above": 1024
+                "ignore_above": 1024,
+                "fields": {
+                  "text": { "type": "text" }
+                }
               }
             }
           }
         ],
         "properties": {
-          "timestamp": {
-            "type": "date",
-            "format": "yyyy-MM-dd HH:mm:ss.SSS||yyyy-MM-dd||epoch_millis||strict_date_optional_time"
-          },
-          "rule": {
-            "properties": {
-              "level": { "type": "integer" },
-              "id": { "type": "keyword" },
-              "description": { "type": "keyword" }
-            }
-          },
-          "agent": {
-            "properties": {
-              "id": { "type": "keyword" },
-              "name": { "type": "keyword" },
-              "ip": { "type": "ip" }
-            }
-          },
-          "full_log": { "type": "text" },
-          "location": { "type": "keyword" }
+          "@timestamp":  { "type": "date" },
+          "timestamp":   { "type": "date", "format": "yyyy-MM-dd HH:mm:ss.SSS||yyyy-MM-dd||epoch_millis||strict_date_optional_time" },
+          "rule":        { "properties": { "level": { "type": "integer" }, "id": { "type": "keyword" }, "description": { "type": "keyword" }, "firedtimes": { "type": "integer" }, "mail": { "type": "boolean" }, "groups": { "type": "keyword" } } },
+          "agent":       { "properties": { "id": { "type": "keyword" }, "name": { "type": "keyword" }, "ip": { "type": "ip" } } },
+          "manager":     { "properties": { "name": { "type": "keyword" } } },
+          "cluster":     { "properties": { "name": { "type": "keyword" }, "node": { "type": "keyword" } } },
+          "id":          { "type": "keyword" },
+          "full_log":    { "type": "text" },
+          "location":    { "type": "keyword" },
+          "decoder":     { "properties": { "name": { "type": "keyword" }, "parent": { "type": "keyword" } } },
+          "predecoder":  { "properties": { "hostname": { "type": "keyword" }, "program_name": { "type": "keyword" }, "timestamp": { "type": "keyword" } } },
+          "GeoLocation": { "properties": { "city_name": { "type": "keyword" }, "country_name": { "type": "keyword" }, "region_name": { "type": "keyword" }, "location": { "type": "geo_point" } } }
         }
       }
-    }' 2>&1)
+    }')
 
   if echo "$response" | grep -q '"acknowledged":true'; then
     echo "Wazuh index template created successfully!"
     break
   else
-    echo "Template creation attempt $i/10 failed, retrying in 5s... Response: $response"
+    echo "Template attempt $i/10 failed, retrying... $response"
     sleep 5
   fi
 done
