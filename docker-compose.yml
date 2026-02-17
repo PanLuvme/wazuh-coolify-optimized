@@ -12,6 +12,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    ports:
+      - "127.0.0.1:9200:9200"  # Localhost only - for management commands
     environment:
       - "COMPATIBILITY_OVERRIDE_MAIN_RESPONSE_VERSION=true"
       - "OPENSEARCH_JAVA_OPTS=-Xms1536m -Xmx1536m -XX:+UseG1GC"
@@ -110,7 +112,7 @@ services:
     networks:
       - wazuh-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      test: ["CMD-SHELL", "curl -s -u admin:admin http://localhost:5601/api/status | grep -q 'version' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
